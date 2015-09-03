@@ -21,7 +21,7 @@ describe('SongQueue', function() {
 
   describe('when a song is added', function() {
     describe('when it is the only song in the song queue', function() {
-      xit('plays it', function() {
+      it('plays it', function() {
         var songQueue = new SongQueue();
         songQueue.add(songData1);
         expect(playSpy).to.have.been.called;
@@ -29,7 +29,7 @@ describe('SongQueue', function() {
     });
 
     describe('when it is not the only song in the song queue', function() {
-      xit('does nothing', function() {
+      it('does nothing', function() {
         var songQueue = new SongQueue(songData1);
         songQueue.add(songData2);
         expect(playSpy).to.have.not.been.called;
@@ -38,7 +38,7 @@ describe('SongQueue', function() {
   });
 
   describe('when a song ends', function() {
-    xit('removes the song from the queue', function() {
+    it('removes the song from the queue', function() {
       var songQueue = new SongQueue([songData1, songData2]);
       song2 = songQueue.at(1);
       expect(songQueue.length).to.equal(2);
@@ -48,7 +48,7 @@ describe('SongQueue', function() {
     });
 
     describe('if there are any songs left in the queue', function() {
-      xit('plays the first song in the queue', function() {
+      it('plays the first song in the queue', function() {
         var songQueue = new SongQueue([songData1, songData2]);
         songQueue.at(0).ended();
         expect(playSpy).to.have.been.called;
@@ -56,7 +56,7 @@ describe('SongQueue', function() {
     });
 
     describe('if there are no songs left in the queue', function() {
-      xit('does nothing', function() {
+      it('does nothing', function() {
         var songQueue = new SongQueue(songData1);
         songQueue.at(0).ended();
         expect(playSpy).to.have.not.been.called;
@@ -65,17 +65,37 @@ describe('SongQueue', function() {
   });
 
   describe('when a song is dequeued', function() {
-    xit('removes the song', function() {
+    it('removes the song', function() {
       removeSpy = sinon.spy(SongQueue.prototype, 'remove');
       var songQueue = new SongQueue(songData1);
       songQueue.at(0).dequeue();
       expect(removeSpy).to.have.been.called;
       SongQueue.prototype.remove.restore();
     });
+    describe('when dequeued song is the only song', function() {
+      it('should trigger a stop event', function() {
+        var triggerSpy = sinon.spy(SongQueue.prototype, 'trigger');
+        var songQueue = new SongQueue(songData1);
+        songQueue.at(0).dequeue();
+        expect(triggerSpy.getCall(0).args[0]).to.equal('dequeue');
+        expect(triggerSpy.getCall(1).args[0]).to.equal('remove');
+        expect(triggerSpy.getCall(2).args[0]).to.equal('stop');
+        SongQueue.prototype.trigger.restore();
+      });
+    });
+    describe('when dequeued song is the first song, and there are other songs in the queue', function() {
+      it('should play next song', function() {
+        var songQueue = new SongQueue([songData1, songData2]);
+        var song2 = songQueue.at(1);
+        songQueue.at(0).dequeue();
+        expect(playSpy).to.have.been.called.twice;
+        expect(songQueue.at(0)).to.equal(song2);
+      });
+    });
   });
 
   describe('playFirst', function() {
-    xit('plays the first song in the queue', function() {
+    it('plays the first song in the queue', function() {
       sinon.spy(SongModel.prototype, 'play');
       var songQueue = new SongQueue(songData1);
       songQueue.playFirst();
