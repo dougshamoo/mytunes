@@ -30,8 +30,47 @@
         // build a view for the top level of the whole app
         var appView = new AppView({model: app});
 
+        // visualizer view
+        $('body').append('<canvas id="canvas" width="600" height="300"></canvas>');
+
         // put the view onto the screen
         $('body').append(appView.render());
+
+        // Begin visualizer stuff!!!
+        var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var analyser = audioCtx.createAnalyser();
+        var audio = $('audio');
+        audio.css('width', '600px');
+        var source = audioCtx.createMediaElementSource(audio[0]);
+
+        source.connect(analyser);
+        analyser.connect(audioCtx.destination);
+
+        var freqByteData = new Uint8Array(analyser.frequencyBinCount);
+
+        var gfx;
+        function setupCanvas() {
+          var canvas = document.getElementById('canvas');
+          gfx = canvas.getContext('2d');
+          requestAnimationFrame(renderVisual);
+        }
+        setupCanvas();
+
+        function renderVisual() {
+          requestAnimationFrame(renderVisual);
+          gfx.clearRect(0,0,800,600);
+          gfx.fillStyle = 'gray';
+          gfx.fillRect(0,0,800,600);
+
+          analyser.getByteFrequencyData(freqByteData);
+          $('.visualizer').text(freqByteData);
+          gfx.fillStyle = 'red';
+          for(var i=0; i<freqByteData.length; i+=5) {
+            gfx.fillRect(i*(3/4),(256-freqByteData[i])*(300/256),2,300);
+          }
+        }
+
+        renderVisual();
       });
     </script>
   </body>
